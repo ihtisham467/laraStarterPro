@@ -12,7 +12,7 @@
             <h2 class="my-6 text-2xl font-semibold text-gray-700">
               <slot name="header" />
             </h2>
-
+            <toast-alert :message="$page.props.flash.message" :type="$page.props.flash.type" />
             <slot />
           </div>
         </main>
@@ -25,4 +25,5 @@
 import Navigation from './Navigation.vue';
 import TopMenu from "./TopMenu.vue";
 import NavigationMobile from './NavigationMobile.vue';
+import ToastAlert from "@/Components/ToastAlert.vue";
 </script>

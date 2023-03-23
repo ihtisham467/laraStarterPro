@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Permissions;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CreateRoleRequest;
+use App\Http\Requests\Permissions\CreateRoleRequest;
+use App\Models\PermissionCategory;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use DB;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
@@ -17,7 +20,7 @@ class RoleController extends Controller
         $roles = Role::paginate();
         return inertia('Roles/Index', compact('roles'));
     }
-    
+
     /**
      * Show the form for creating a new resource.
      */
@@ -35,8 +38,9 @@ class RoleController extends Controller
             'name' => $request->name,
         ]);
 
-        return redirect(route('roles.index'))->with('successMsg', 'Role Created Successfully!');
+        flashMessage('New Role Created Successfully!', 'success');
 
+        return redirect(route('roles.index'));
     }
 
     /**
@@ -66,8 +70,47 @@ class RoleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $role = Role::withCount('users')->where('id', $id)->firstOrFail();
+            if ($role->users_count > 0) {
+                flashMessage('This Role cannot be deleted because it has users attached!', 'error');
+                return back();
+            }
+            $role->delete();
+
+            DB::commit();
+            flashMessage('Role deleted successfully!', 'success');
+            return back();
+        } catch (\Exception $e) {
+            DB::rollback();
+            flashMessage('Something went wrong!', 'error');
+            return back();
+        }
+    }
+
+    public function rolePermissions($id)
+    {
+        $categories = PermissionCategory::with('permissions')->get();
+        $role = Role::where('id', $id)->firstOrFail();
+        $rolePermissions = $role->permissions->pluck('id');
+        return inertia('Permissions/RolePermissions', compact('role', 'categories', 'rolePermissions'));
+    }
+
+    public function updateRolePermissions(Request $request, $id)
+    {
+        try {
+            $role = Role::where('id', $id)->firstOrFail();
+            $permissions = Permission::whereIn('id', $request->permissions)->get();
+            $role->syncPermissions($permissions);
+
+            flashMessage($role->name . ' Permissions updated successfully!', 'success');
+            return back();
+        } catch (\Exception $e) {
+            flashMessage('Something went wrong!', 'error');
+            return back();
+        }
     }
 }

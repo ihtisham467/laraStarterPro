@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,13 +41,12 @@ class HandleInertiaRequests extends Middleware
             'flash' => function () use ($request) {
                 return [
                     'success' => $request->session()->get('success'),
+                    'message' => fn () => session('message'),
+                    'type' => fn () => session('type'),
                 ];
             },
             'showingMobileMenu' => false,
-            'flash' => [
-                'successMsg' => fn () => session('successMsg'),
-                'errorMsg' => fn () => session('errorMsg'),
-            ],
+            'appSetting' => AppSetting::firstOrFail(),
         ]);
     }
 }

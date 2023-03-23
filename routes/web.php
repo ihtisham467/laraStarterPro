@@ -1,8 +1,15 @@
 <?php
 
+use App\Http\Controllers\AppSettingController;
+use App\Http\Controllers\Locations\CityController;
+use App\Http\Controllers\Locations\NeighbourhoodController;
+use App\Http\Controllers\Locations\ProvinceController;
+use App\Http\Controllers\Permissions\PermissionCategoryController;
+use App\Http\Controllers\Permissions\PermissionController;
 use App\Http\Controllers\Permissions\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Models\PermissionCategory;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -39,8 +46,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    
     Route::resource('roles', RoleController::class);
+    Route::resource('permissions', PermissionController::class);
+    Route::resource('permission-categories', PermissionCategoryController::class);
+    Route::get('/roles-permissions/{id}', [RoleController::class, 'rolePermissions'])->name('roles.permissions');
+    Route::post('/roles-permissions/{id}', [RoleController::class, 'updateRolePermissions'])->name('roles.update-permissions');
+    Route::get('/app-setting', [AppSettingController::class, 'index'])->name('app-setting.index');
+    Route::post('/app-setting', [AppSettingController::class, 'update'])->name('app-setting.update');
+
+    // Locations
+    Route::resource('provinces', ProvinceController::class);
+    Route::resource('cities', CityController::class);
+    Route::resource('neighbourhoods', NeighbourhoodController::class);
 });
 
 require __DIR__.'/auth.php';
